@@ -13,3 +13,6 @@ The aim of this study was to examine the effect of this move to in situ net clea
 ^3^Centre for Sustainable Tropical Fisheries and Aquaculture, College of Science and Engineering, James Cook University, Townsville, Queensland, Australia
 
 **Keywords**: Bacteria, Biofouling, Cnidarians, Lesion, Net cleaning, Salmon farming, Skin health
+
+This research was funded by the New Zealand Ministry of Business, Innovation and Employment (MBIE) under the programme “Aquaculture Health Strategies to Maximise Productivity and Security” (Contract: CAWX1707).
+
