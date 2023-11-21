@@ -1,0 +1,7 @@
+Trial,Test,.y.,group1,group2,n1,n2,statistic,p,Tissue
+RUA,Tenacibaculum spp.,value,Biofouling,Control,48,46,904.5,0.0274,NA
+RUA,Vibrio spp.,value,Biofouling,Control,48,46,1072,0.721,NA
+FRC,Tenacibaculum spp.,value,Biofouling,Control,24,28,300,0.107,Kidney
+FRC,Tenacibaculum spp.,value,Biofouling,Control,24,28,250.5,0.105,Skin
+FRC,Vibrio spp.,value,Biofouling,Control,24,28,300,0.107,Kidney
+FRC,Vibrio spp.,value,Biofouling,Control,24,28,166.5,7.08e-4,Skin

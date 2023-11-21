@@ -1,0 +1,6 @@
+name,.y.,group1,group2,n1,n2,statistic,p
+Length (mm),value,Biofouling,Control,55,51,1150,0.111
+SeverityScore,value,Biofouling,Control,55,51,1505.5,0.449
+TotalSpots,value,Biofouling,Control,55,51,1493.5,0.504
+TotalUlcer,value,Biofouling,Control,55,51,1428,0.345
+Weight (g),value,Biofouling,Control,50,51,1167.5,0.467

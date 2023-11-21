@@ -1,0 +1,17 @@
+Trial,Treatment,Tissue,Test,variable,n,min,max,median,q1,q3,iqr,mad,mean,sd,se,ci
+RUA,Biofouling,Kidney,Tenacibaculum spp.,value,24,0,0,0,0,0,0,0,0,0,0,0
+RUA,Control,Kidney,Tenacibaculum spp.,value,23,0,0,0,0,0,0,0,0,0,0,0
+RUA,Biofouling,Skin,Tenacibaculum spp.,value,24,0,1,0,0,0,0,0,0.208,0.415,0.085,0.175
+RUA,Control,Skin,Tenacibaculum spp.,value,23,0,3,1,0,1,1,0,0.652,0.714,0.149,0.309
+RUA,Biofouling,Kidney,Vibrio spp.,value,24,0,0,0,0,0,0,0,0,0,0,0
+RUA,Control,Kidney,Vibrio spp.,value,23,0,0,0,0,0,0,0,0,0,0,0
+RUA,Biofouling,Skin,Vibrio spp.,value,24,0,1,0,0,1,1,0,0.333,0.482,0.098,0.203
+RUA,Control,Skin,Vibrio spp.,value,23,0,1,0,0,1,1,0,0.391,0.499,0.104,0.216
+FRC,Biofouling,Kidney,Tenacibaculum spp.,value,24,0,0,0,0,0,0,0,0,0,0,0
+FRC,Control,Kidney,Tenacibaculum spp.,value,28,0,3,0,0,0,0,0,0.321,0.945,0.179,0.366
+FRC,Biofouling,Skin,Tenacibaculum spp.,value,24,0,3,1,1,2,1,1.483,1.292,0.999,0.204,0.422
+FRC,Control,Skin,Tenacibaculum spp.,value,28,0,3,2,1,3,2,1.483,1.821,1.219,0.23,0.473
+FRC,Biofouling,Kidney,Vibrio spp.,value,24,0,0,0,0,0,0,0,0,0,0,0
+FRC,Control,Kidney,Vibrio spp.,value,28,0,3,0,0,0,0,0,0.25,0.799,0.151,0.31
+FRC,Biofouling,Skin,Vibrio spp.,value,24,0,3,0,0,0.25,0.25,0,0.542,1.062,0.217,0.449
+FRC,Control,Skin,Vibrio spp.,value,28,0,3,2.5,0,3,3,0.741,1.821,1.335,0.252,0.518

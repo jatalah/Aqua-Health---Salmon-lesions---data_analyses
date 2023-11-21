@@ -1,13 +1,10 @@
 library(tidyverse)
 library(readxl)
 library(ggpubr)
-library(ggpmisc)
-library(infer)
 library(rstatix)
-library(skimr)
 
 rm(list = ls())
-skim(dd)
+
 # read data
 frc_base <- 
   read_excel('data/FRC_tank trial_data.xlsx', 1) %>%  
@@ -33,7 +30,7 @@ ggplot(frc_base,
 
 # final data ---------
 fcr_final <- 
-  read_excel('data/FRC_tank trial_data.xlsx', 1) %>% 
+  read_excel('data/FRC_tank trial_data.xlsx', 1) %>%   
   filter(Sampling == "Final") %>%  
   pivot_longer(c(`Length (mm)`, `Weight (g)`, TotalSpots:SeverityScore))
 
@@ -43,11 +40,14 @@ fcr_final %>%
   group_by(name) %>% 
   get_summary_stats(value)
 
+write_csv(.Last.value, 'tables/frc_summary_stats_lesions.csv')
 
 # Wilcox values---
 fcr_final %>% 
   group_by(name) %>% 
   wilcox_test(value~Treatment)
+
+write_csv(.Last.value, 'tables/frc_wilcox_tests_lesions.csv')
 
 # boxplots------
 ggplot(fcr_final, aes(fct_rev(name), value, fill = Treatment)) +
@@ -118,16 +118,6 @@ morts_d %>%
 prop.test(x = c(8, 0), n = c(40,40))
 
 
-#same format as RUA plot - Lauren added
-ggplot(fcr_final, aes(fct_rev(name), value, fill = Treatment)) +
-  geom_boxplot() +
-  coord_flip() +
-  labs(y = "Score", x = NULL) +
-  stat_compare_means(label.y = 3,
-                     label = "p.format",
-                     method = 'wilcox.test')
-
-
 # lesions prevalence plot--------------
 prev_d <-
   read_excel('data/FRC_tank trial_data.xlsx', 1) %>% 
@@ -140,55 +130,8 @@ prev_d <-
   summarise(
     prevalence_ulcer = sum(prevalence_ulcer) / n(),
     prevalence_spots = sum(prevalence_spots) / n()
-  )
-
-ggplot(prev_d) +
+  ) %>% 
+  ggplot() +
   geom_col(aes(Treatment, prevalence_spots, fill = factor(Tank)), position = position_dodge()) +
   scale_y_continuous(labels = scales::label_percent()) +
   ggthemes::scale_fill_economist(name = "Tank")
-
-
-
-# Bacterial swabs of lesions and normal skin (Lauren got from original "website")
-bact_frc <- 
-  read_excel('data/FRC_tank trial_data.xlsx', 1) %>% 
-  filter(Sampling == "Final") %>%
-  mutate(across(`SKIN-BA`:`AK-MSSM`, 
-                ~ fct_recode(.x,
-                             `0` = "NG",
-                             `1` = "1+",
-                             `2` = "2+",
-                             `3` = "3+"))) %>%
-  mutate(across(`SKIN-BA`:`AK-MSSM`, as.character)) %>% 
-  mutate(across(`SKIN-BA`:`AK-MSSM`, as.numeric)) %>% 
-  drop_na(`SKIN-BA`:`AK-MSSM`) %>% 
-  mutate()
-
-bact_long_frc <- 
-  bact_frc %>% 
-  pivot_longer(`SKIN-BA`:`AK-MSSM`)
-
-bact_long_skin_frc <- bact_long_frc %>% filter(str_detect(name, "SKIN"))
-
-# symbols, not p values
-
-ggplot(bact_long_frc, aes(name, value, color = Treatment)) +
-  # geom_point(position = position_dodge(width = .5)) +
-  stat_summary(fun.data = "mean_se", position = position_dodge(width = .5)) +
-  coord_flip() +
-  labs(x = "Bacteriological culture", y = "Score") +
-  stat_compare_means(label.y = 2,
-                     label = "p.signif",
-                     size = 3) +
-  facet_wrap( ~ BactoSampleType)
-
-# p values shown on the plot
-ggplot(bact_long_frc, aes(name, value, color = Treatment)) +
-  # geom_point(position = position_dodge(width = .5)) +
-  stat_summary(fun.data = "mean_se", position = position_dodge(width = .5)) +
-  coord_flip() +
-  labs(x = "Bacteriological culture", y = "Score") +
-  stat_compare_means(label.y = 2,
-                     label = "p.format",
-                     size = 3) +
-  facet_wrap( ~ BactoSampleType)

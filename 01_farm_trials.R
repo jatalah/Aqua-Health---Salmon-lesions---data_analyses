@@ -10,8 +10,8 @@ rm(list = ls())
 
 # read data -----------
 d <- read_excel('data/RUA_tank trial_data.xlsx', 1, na = "NA")
-source(theme_javier(base_size = 9))
-theme_set(theme_javier())
+source(theme_javier())
+theme_set(theme_javier(base_size = 9))
 
 # check data stats-------
 skim(d)
@@ -43,13 +43,13 @@ ggplot(base, aes(Treatment, value, fill = Treatment)) +
 
 
 # Mortality ------------ 
-morts_d <- 
+morts_d <-
   full_join(
-  d %>% filter(Sampling == "Mortality") %>% group_by(Treatment, Tank) %>% count(name = "morts"),
-  d %>% filter(Sampling == "Final") %>% group_by(Treatment, Tank) %>% count(name = 'surv')
-) %>% 
-  mutate(n = morts + surv, 
-         prop_mort = morts/n) %>% 
+    d %>% filter(Sampling == "Mortality") %>% group_by(Treatment, Tank) %>% count(name = "morts"),
+    d %>% filter(Sampling == "Final") %>% group_by(Treatment, Tank) %>% count(name = 'surv')
+  ) %>%
+  mutate(n = morts + surv,
+         prop_mort = morts / n) %>%
   ungroup()
 
 morts_d
@@ -102,20 +102,16 @@ coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d)
 coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d) %>% 
   tbl_regression(exp = T, show_single_row = "Treatment") 
 
-
+# Mortality data -------
 mort_long <-
   d %>%
   filter(Sampling == "Mortality") %>%
   pivot_longer(TotalSpots:SeverityScore)
   
 mort_long %>%
-  group_by(Treatment, name) %>%
-  summarise(across(value,
-                   list(
-                     median = \(x) median(x, na.rm = T),
-                     Q1 = \(x) quantile(x, probs = 0.25),
-                     Q3 = \(x) quantile(x, probs = 0.75)
-                   ))) 
+  group_by(Treatment, name) %>% 
+  get_summary_stats(value)
+
 
 
 ggplot(mort_long, aes(fct_rev(name), value, fill = Treatment)) +
@@ -128,19 +124,22 @@ ggplot(mort_long, aes(fct_rev(name), value, fill = Treatment)) +
 
 
 # compare length and size by treatment final -------
-final <- d %>% 
+final <- 
+  d %>% 
   filter(Sampling == "Final") %>% 
   pivot_longer(cols = c(`Length (mm)`, `Weight (g)`, TotalSpots:SeverityScore)) 
 
 # summary stats --------
 final %>% 
   group_by(name) %>% 
-  get_summary_stats(value)
+  get_summary_stats(value) %>% 
+  write_csv('tables/frc_summary_stats_lesions.csv')
 
 # Wilcox - test ------------
 final %>% 
   group_by(name) %>%
-  wilcox_test(value ~ Treatment)
+  wilcox_test(value ~ Treatment) %>% 
+  write_csv('tables/frc_wilcox_tests_lesions.csv')
 
 ggplot(final,
        aes(Treatment, value)) +
