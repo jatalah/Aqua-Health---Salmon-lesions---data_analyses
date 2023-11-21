@@ -10,7 +10,7 @@ rm(list = ls())
 
 # read data -----------
 d <- read_excel('data/RUA_tank trial_data.xlsx', 1, na = "NA")
-source(theme_javier())
+source('theme_javier.R')
 theme_set(theme_javier(base_size = 9))
 
 # check data stats-------
@@ -132,14 +132,16 @@ final <-
 # summary stats --------
 final %>% 
   group_by(name) %>% 
-  get_summary_stats(value) %>% 
-  write_csv('tables/frc_summary_stats_lesions.csv')
+  get_summary_stats(value)
+
+write_csv(.Last.value, 'tables/RUA_summary_stats_lesions.csv')
 
 # Wilcox - test ------------
 final %>% 
   group_by(name) %>%
-  wilcox_test(value ~ Treatment) %>% 
-  write_csv('tables/frc_wilcox_tests_lesions.csv')
+  wilcox_test(value ~ Treatment)
+
+write_csv(.Last.value, 'tables/RUA_wilcox_tests_lesions.csv')
 
 ggplot(final,
        aes(Treatment, value)) +

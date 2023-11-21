@@ -32,9 +32,37 @@ prep_fuction <- function(path) {
     )
 }
 
-
 bact_rua <- prep_fuction('data/RUA_tank trial_data.xlsx')
 bact_frc <- prep_fuction('data/FRC_tank trial_data.xlsx')
+
+# summary stats------
+bind_rows(
+  RUA =
+    bact_rua %>%
+    group_by(Test, Tissue, Treatment) %>%
+    get_summary_stats(value),
+  FRC = bact_frc %>%
+    group_by(Test, Tissue, Treatment) %>%
+    get_summary_stats(value),
+  .id = "Trial"
+) %>% 
+  write_csv('tables/summary_stats_fish_bacteria.csv')
+
+# Wilcox - test --------------
+bind_rows(
+  RUA =
+    bact_rua %>%
+    filter(Test != "Kidney") %>%
+    group_by(Test) %>%
+    wilcox_test(value ~ Treatment),
+  FRC =
+    bact_frc %>%
+    group_by(Test, Tissue) %>%
+    wilcox_test(value ~ Treatment),
+  .id = 'Trial'
+) %>% 
+  write_csv('tables/wilcox_tests_fish_bacteria.csv')
+
 
 # Figure 6 - bacterial load plot ------------
 plot_func <- function(data) {
@@ -50,7 +78,6 @@ plot_func <- function(data) {
   }
 
 b1 <- plot_func(bact_rua)
-  
 b2 <- plot_func(bact_frc)
 
 # put plots together------------  
