@@ -10,43 +10,35 @@ rm(list = ls())
 
 # read data -----------
 d <- read_excel('data/RUA_tank trial_data.xlsx', 1, na = "NA")
+source(theme_javier(base_size = 9))
+theme_set(theme_javier())
 
 # check data stats-------
 skim(d)
 
 # summarise data -----------
-d %>%
-  group_by(Sampling) %>%
-  summarise(across(
-    c(`Weight (g)`, `Length (mm)`),
-    list(
-      mean = \(x) mean(x, na.rm = T),
-      se = \(x) sd(x, na.rm = T) / sqrt(n())
-    )
-  ))
+d %>% group_by(Sampling) %>% get_summary_stats(`Length (mm)`)
+d %>% group_by(Sampling) %>% get_summary_stats(`Weight (g)`)
 
-# compare length and size by treatment baseline -------
-base <- 
-  d %>%
-  filter(Sampling == "Baseline")
+
+# baseline data compare length and size by treatment -------
+base <-
+  d %>% 
+  filter(Sampling == "Baseline") %>% 
+  pivot_longer(cols = c(`Length (mm)`, `Weight (g)`)) 
 
 base %>% 
-  group_by(Sampling) %>%
-  wilcox.test(data =., `Length (mm)` ~ Treatment)
+  group_by(name) %>% 
+  get_summary_stats(value)
 
-base %>%
-  group_by(Sampling) %>%
-  wilcox.test(data =., `Weight (g)` ~ Treatment)
+base %>% 
+  group_by(name) %>% 
+  wilcox_test(value ~ Treatment)
 
 # plots --------
-ggplot(base,
-       aes(Treatment, `Length (mm)`)) +
-  geom_boxplot() +
-  stat_compare_means(method = 'wilcox.test')
-
-ggplot(base,
-       aes(Treatment, `Weight (g)`)) +
-  geom_boxplot() +
+ggplot(base, aes(Treatment, value, fill = Treatment)) +
+  geom_boxplot(alpha = .7) +
+  facet_wrap(~name, scales = 'free') +
   stat_compare_means(method = 'wilcox.test')
 
 
@@ -136,62 +128,21 @@ ggplot(mort_long, aes(fct_rev(name), value, fill = Treatment)) +
 
 
 # compare length and size by treatment final -------
-final <- 
-  d %>%
-  filter(Sampling == "Final") 
+final <- d %>% 
+  filter(Sampling == "Final") %>% 
+  pivot_longer(cols = c(`Length (mm)`, `Weight (g)`, TotalSpots:SeverityScore)) 
 
+# summary stats --------
 final %>% 
-  group_by(Sampling) %>%
-  wilcox.test(data =., `Length (mm)` ~ Treatment)
+  group_by(name) %>% 
+  get_summary_stats(value)
 
+# Wilcox - test ------------
 final %>% 
-  group_by(Sampling) %>%
-  wilcox.test(data =., `Weight (g)` ~ Treatment)
-
-
-ggplot(final,
-       aes(Treatment, `Length (mm)`)) +
-  geom_boxplot() +
-  stat_compare_means(method = 'wilcox.test')
-
-ggplot(final,
-       aes(Treatment, `Weight (g)`)) +
-  geom_boxplot() +
-  stat_compare_means(method = 'wilcox.test')
-
-
-# summary stats lesion, spots and ulcers-----------
-final_long <- 
-  final %>% 
-  pivot_longer(TotalSpots:SeverityScore) 
-
-
-final_long %>% 
-  group_by(Treatment, name) %>% 
-  summarise(across(value,
-    list(
-      median = \(x) median(x, na.rm = T),
-      # se = \(x) sd(x, na.rm = T)/sqrt(n()),
-      Q1 = \(x) quantile(x, probs = 0.25),
-      Q3 = \(x) quantile(x, probs = 0.75)
-    )
-  ))
-
-
-# differences in lesions  between treatments---
-final_long %>%
-  group_by(Tank, Treatment, name) %>%
-  summarise(value = mean(value, na.rm = T)) %>%
   group_by(name) %>%
-  nest() %>%
-  mutate(tests = map(data, ~ wilcox_test(value ~ Treatment, data = .x))) %>%
-  select(tests) %>%
-  unnest(cols = tests)
+  wilcox_test(value ~ Treatment)
 
-ggplot(final_long, aes(fct_rev(name), value, fill = Treatment)) +
+ggplot(final,
+       aes(Treatment, value)) +
   geom_boxplot() +
-  coord_flip() +
-  labs(y = "Score", x = NULL) +
-  stat_compare_means(label.y = 3,
-                     label = "p.format",
-                     method = 'wilcox.test')
+  facet_wrap(~name, scales = 'free')

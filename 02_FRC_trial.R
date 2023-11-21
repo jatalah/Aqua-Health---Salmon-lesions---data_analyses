@@ -1,63 +1,59 @@
 library(tidyverse)
 library(readxl)
-library(skimr)
 library(ggpubr)
 library(ggpmisc)
 library(infer)
 library(rstatix)
+library(skimr)
 
 rm(list = ls())
-
-# read data
-dd <- read_excel('data/FRC_tank trial_data.xlsx', 1)
-
 skim(dd)
+# read data
+frc_base <- 
+  read_excel('data/FRC_tank trial_data.xlsx', 1) %>%  
+  pivot_longer(cols = c(`Length (mm)`, `Weight (g)`)) %>% 
+  filter(Sampling == "Baseline") 
+
 
 # summarise 
-dd %>%
-  group_by(Sampling) %>%
-  summarise(across(
-    c(`Weight (g)`, `Length (mm)`),
-    list(
-      mean = \(x) mean(x, na.rm = T),
-      se = \(x) sd(x, na.rm = T)/sqrt(n())
-    )
-  ))
+frc_base %>%
+  group_by(name) %>% 
+  get_summary_stats(value)
 
 # compare length and size by treatment baseline -------
-dd %>%
-  filter(Sampling == "Baseline") %>% 
-  wilcox.test(data =., `Length (mm)` ~ Treatment)
+frc_base %>%
+  group_by(name) %>% 
+  wilcox_test(value ~ Treatment)
 
-dd %>%
-  filter(Sampling == "Baseline") %>% 
-  wilcox.test(data =., `Weight (g)` ~ Treatment)
-
-
-ggplot(dd %>% filter(Sampling == "Baseline"),
-       aes(Treatment, `Length (mm)`)) +
+ggplot(frc_base,
+       aes(Treatment, value)) +
   geom_boxplot() +
-  stat_compare_means(method = 'wilcox.test')
-
-ggplot(dd %>% filter(Sampling == "Baseline"),
-       aes(Treatment, `Weight (g)`)) +
-  geom_boxplot() +
-  stat_compare_means(method = 'wilcox.test')
+  facet_wrap(~name, scale = 'free')
 
 
 # final data ---------
-fcr_final <- dd %>% filter(Sampling == "Final")
+fcr_final <- 
+  read_excel('data/FRC_tank trial_data.xlsx', 1) %>% 
+  filter(Sampling == "Final") %>%  
+  pivot_longer(c(`Length (mm)`, `Weight (g)`, TotalSpots:SeverityScore))
 
-fcr_final_long <- 
-  fcr_final %>% 
-  pivot_longer(TotalSpots:SeverityScore) 
 
-ggplot(fcr_final_long, aes(fct_rev(name), value, fill = Treatment)) +
+# stats ----
+fcr_final %>% 
+  group_by(name) %>% 
+  get_summary_stats(value)
+
+
+# Wilcox values---
+fcr_final %>% 
+  group_by(name) %>% 
+  wilcox_test(value~Treatment)
+
+# boxplots------
+ggplot(fcr_final, aes(fct_rev(name), value, fill = Treatment)) +
   geom_boxplot(alpha = .5) +
-  coord_flip() +
-  labs(y = "Score", x = NULL) +
-  stat_compare_means(label.y = .8, label = "p.signif", size = 3, method = 'wilcox.test')
-
+  facet_wrap(~name, scales = 'free') +
+  labs(y = "Score", x = NULL)
 
 # survival analyses---------
 library(ggsurvfit)
@@ -65,14 +61,16 @@ library(survival)
 library(gtsummary)
 library(tidycmprsk)
 
-surv_d_frc <- 
-  dd %>% 
-  filter(Sampling != "Baseline") %>% 
-  distinct(FishID, Tank, Date, Treatment, Sampling) %>% 
-  mutate(start_date = dmy("16/02/2022"),
-         time = as.duration(start_date %--% Date) / ddays(1),
-         status = if_else(Sampling=="Mortality", 1, 0)) %>% 
-  select(FishID, Tank, Treatment, time , status) %>% 
+surv_d_frc <-
+  read_excel('data/FRC_tank trial_data.xlsx', 1) %>%
+  filter(Sampling != "Baseline") %>%
+  distinct(FishID, Tank, Date, Treatment, Sampling) %>%
+  mutate(
+    start_date = dmy("16/02/2022"),
+    time = as.duration(start_date %--% Date) / ddays(1),
+    status = if_else(Sampling == "Mortality", 1, 0)
+  ) %>%
+  select(FishID, Tank, Treatment, time , status) %>%
   mutate(Treatment = fct_relevel(Treatment, "Control"))
 
 write_csv(surv_d_frc, 'data/surv_d_frc.csv')
@@ -87,7 +85,6 @@ survfit2(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc) %>%
   add_confidence_interval() +
   add_risktable()
 
-
 # summary of survival model 
 survfit(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc) %>% 
   tbl_survfit(
@@ -96,15 +93,16 @@ survfit(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc) %>%
   )
 
 # The Cox regression model is a semi-parametric model that can be used to fit regression models that have survival outcomes. # We can fit regression models for survival data using the coxph() function from the {survival} package
-coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc)
+coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc) %>% broom::tidy()
 
 coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc) %>% 
   tbl_regression(exp = T, show_single_row = "Treatment") 
 
 
-# analyse proportion of morts by tank using chi-square 
+# analyse proportion of morts by tank using chi-square --------------
 morts_d <-
-  dd %>% filter(Sampling == "Final") %>% 
+  read_excel('data/FRC_tank trial_data.xlsx', 1) %>% 
+  filter(Sampling == "Final") %>% 
   group_by(Treatment, Tank) %>% 
   count(name = 'surv') %>%
   mutate(n = 10,
@@ -120,16 +118,8 @@ morts_d %>%
 prop.test(x = c(8, 0), n = c(40,40))
 
 
-# Lesions-----------
-ggplot(fcr_final_long, aes(fct_rev(name), value, fill = Treatment)) +
-  geom_boxplot(alpha =.45) +
-  coord_flip() +
-  labs(y = "Score", x = NULL) +
-  stat_compare_means(label.y = .8, label = "p.signif", size = 3)
-
-
 #same format as RUA plot - Lauren added
-ggplot(fcr_final_long, aes(fct_rev(name), value, fill = Treatment)) +
+ggplot(fcr_final, aes(fct_rev(name), value, fill = Treatment)) +
   geom_boxplot() +
   coord_flip() +
   labs(y = "Score", x = NULL) +
@@ -138,9 +128,10 @@ ggplot(fcr_final_long, aes(fct_rev(name), value, fill = Treatment)) +
                      method = 'wilcox.test')
 
 
-# prevalence plot
+# lesions prevalence plot--------------
 prev_d <-
-  fcr_final %>%
+  read_excel('data/FRC_tank trial_data.xlsx', 1) %>% 
+  filter(Sampling == "Final") %>%
   mutate(
     prevalence_ulcer = if_else(TotalUlcer > 0, 1, 0),
     prevalence_spots = if_else(TotalSpots > 0, 1, 0)
@@ -157,30 +148,11 @@ ggplot(prev_d) +
   ggthemes::scale_fill_economist(name = "Tank")
 
 
-# compare length and size by treatment final -------
-dd %>%
-  filter(Sampling == "Final") %>% 
-  wilcox.test(data =., `Length (mm)` ~ Treatment)
-
-dd %>%
-  filter(Sampling == "Final") %>% 
-  wilcox.test(data =., `Weight (g)` ~ Treatment)
-
-
-ggplot(dd %>% filter(Sampling == "Final"),
-       aes(Treatment, `Length (mm)`)) +
-  geom_boxplot() +
-  stat_compare_means(method = 'wilcox.test')
-
-ggplot(dd %>% filter(Sampling == "Final"),
-       aes(Treatment, `Weight (g)`)) +
-  geom_boxplot() +
-  stat_compare_means(method = 'wilcox.test')
 
 # Bacterial swabs of lesions and normal skin (Lauren got from original "website")
-
 bact_frc <- 
-  fcr_final %>%
+  read_excel('data/FRC_tank trial_data.xlsx', 1) %>% 
+  filter(Sampling == "Final") %>%
   mutate(across(`SKIN-BA`:`AK-MSSM`, 
                 ~ fct_recode(.x,
                              `0` = "NG",
@@ -198,16 +170,6 @@ bact_long_frc <-
 
 bact_long_skin_frc <- bact_long_frc %>% filter(str_detect(name, "SKIN"))
 
-# ggplot(bact_long_skin_frc, aes(factor(SeverityScore), value)) +
-#  stat_summary(fun.data = "mean_se", position = position_dodge(width = .5)) +
-#  facet_wrap(~name) +
-#  labs(y = "Bacterial score", x = "Severity Score") 
-
-ggplot(bact_long_skin_frc, aes(factor(SeverityScore), value, color = name)) +
-   # geom_point(fun.data = "mean_se", position = position_jitter(width = .1), alpha = .3) +
- stat_summary(fun.data = "mean_se", position = position_dodge(width = .5)) +
- labs(y = "Bacterial score", x = "Severity Score")
-
 # symbols, not p values
 
 ggplot(bact_long_frc, aes(name, value, color = Treatment)) +
@@ -221,7 +183,6 @@ ggplot(bact_long_frc, aes(name, value, color = Treatment)) +
   facet_wrap( ~ BactoSampleType)
 
 # p values shown on the plot
-
 ggplot(bact_long_frc, aes(name, value, color = Treatment)) +
   # geom_point(position = position_dodge(width = .5)) +
   stat_summary(fun.data = "mean_se", position = position_dodge(width = .5)) +
