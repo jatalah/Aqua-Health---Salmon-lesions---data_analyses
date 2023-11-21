@@ -1,6 +1,7 @@
 library(tidyverse)
 library(readxl)
 library(ggpubr)
+library(broom)
 
 # read soup data -------
 soup <-
@@ -73,57 +74,22 @@ ggsave(
 
 # summary stats---------
 soup %>%
-  group_by(Dose, name, Trial) %>%
-  summarise(across(
-    value,
-    list(
-      min = min,
-      median = median,
-      max = max,
-      Q1 = \(x) quantile(x, probs = 0.25),
-      Q3 = \(x) quantile(x, probs = 0.75)
-    )
-  )) %>%
+  group_by(Dose, name, Trial) %>% 
+  get_summary_stats() %>% 
   write_csv('tables/summary_stats_soup.csv')
-
-soup
 
 water %>%
   group_by(Dose, Treatment, name) %>%
-  summarise(across(
-    value,
-    list(
-      min = min,
-      median = median,
-      max = max,
-      Q1 = \(x) quantile(x, probs = 0.25),
-      Q3 = \(x) quantile(x, probs = 0.75)
-    )
-  )) %>% 
+  get_summary_stats() %>% 
   write_csv('tables/summary_stats_water.csv')
 
-water
-
-# stat----
-# score ANOVAS------------------------- 
-
-library(broom)
-
+# ANOVAS------------------------- 
 soup %>% 
   group_by(name) %>% 
-  nest() %>% 
-  mutate(anovas = map(data, ~anova(lm(value~Dose*Trial, data = .x))),
-         tidied = map(anovas, tidy)) %>% 
-  select(tidied) %>% 
-  unnest(tidied) %>% 
+  group_modify(~ broom::tidy(anova(lm(value~Dose*Trial, data = .x)))) %>% 
   write_csv('tables/anovas_soup.csv')
-  
 
-water %>% 
-  group_by(name) %>% 
-  nest() %>% 
-  mutate(anovas = map(data, ~anova(lm(value~Dose*Treatment, data = .x))),
-         tidied = map(anovas, tidy)) %>% 
-  select(tidied) %>% 
-  unnest(tidied) %>% 
+water %>%
+  group_by(name) %>%
+  group_modify(~ broom::tidy(anova(lm(value~Dose*Treatment, data = .x)))) %>% 
   write_csv('tables/anovas_water.csv')
