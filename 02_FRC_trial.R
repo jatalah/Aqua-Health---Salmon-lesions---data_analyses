@@ -93,7 +93,15 @@ survfit(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc) %>%
   )
 
 # The Cox regression model is a semi-parametric model that can be used to fit regression models that have survival outcomes. # We can fit regression models for survival data using the coxph() function from the {survival} package
-coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc) %>% broom::tidy()
+cox_frc <-   coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc)
+summary(cox_frc)
+
+
+cox_frc %>% 
+broom::tidy(conf.int = T, exponentiate = T)
+
+
+write_csv(.Last.value, 'tables/cox_regression_survival_frc.csv')
 
 coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d_frc) %>% 
   tbl_regression(exp = T, show_single_row = "Treatment") 

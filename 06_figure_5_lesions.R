@@ -25,8 +25,8 @@ all_final <-
   mutate(name = fct_recode(
     name,
     Severity = "SeverityScore",
-    `Total spots` = "TotalSpots",
-    `Total ulcers` = "TotalUlcer"
+    `Spots` = "TotalSpots",
+    `Ulcers` = "TotalUlcer"
   ))
 
 # Morts data --------
@@ -48,8 +48,8 @@ all_mort <-
   mutate(name = fct_recode(
     name,
     Severity = "SeverityScore",
-    `Total spots` = "TotalSpots",
-    `Total ulcers` = "TotalUlcer"
+    `Spots` = "TotalSpots",
+    `Ulcers` = "TotalUlcer"
   ))
 
 

@@ -1,6 +1,10 @@
 library(tidyverse)
 library(ggpubr)
 library(readxl)
+library(skimr)
+library(ggpmisc)
+library(infer)
+library(rstatix)
 
 rm(list = ls())
 source('theme_javier.R')
@@ -39,10 +43,10 @@ bact_frc <- prep_fuction('data/FRC_tank trial_data.xlsx')
 bind_rows(
   RUA =
     bact_rua %>%
-    group_by(Test, Tissue, Treatment) %>%
+    group_by(Test, Tissue, BactoSampleType , Treatment) %>%
     get_summary_stats(value),
   FRC = bact_frc %>%
-    group_by(Test, Tissue, Treatment) %>%
+    group_by(Test, Tissue, BactoSampleType , Treatment) %>%
     get_summary_stats(value),
   .id = "Trial"
 ) %>% 
@@ -53,11 +57,11 @@ bind_rows(
   RUA =
     bact_rua %>%
     filter(Test != "Kidney") %>%
-    group_by(Test) %>%
+    group_by(Test, BactoSampleType) %>%
     wilcox_test(value ~ Treatment),
   FRC =
     bact_frc %>%
-    group_by(Test, Tissue) %>%
+    group_by(Test, Tissue, BactoSampleType) %>%
     wilcox_test(value ~ Treatment),
   .id = 'Trial'
 ) %>% 

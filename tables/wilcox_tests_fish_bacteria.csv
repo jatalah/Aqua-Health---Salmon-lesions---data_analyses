@@ -1,7 +1,13 @@
-Trial,Test,.y.,group1,group2,n1,n2,statistic,p,Tissue
-RUA,Tenacibaculum spp.,value,Biofouling,Control,48,46,904.5,0.0274,NA
-RUA,Vibrio spp.,value,Biofouling,Control,48,46,1072,0.721,NA
-FRC,Tenacibaculum spp.,value,Biofouling,Control,24,28,300,0.107,Kidney
-FRC,Tenacibaculum spp.,value,Biofouling,Control,24,28,250.5,0.105,Skin
-FRC,Vibrio spp.,value,Biofouling,Control,24,28,300,0.107,Kidney
-FRC,Vibrio spp.,value,Biofouling,Control,24,28,166.5,7.08e-4,Skin
+Trial,BactoSampleType,Test,.y.,group1,group2,n1,n2,statistic,p,Tissue
+RUA,Lesion,Tenacibaculum spp.,value,Biofouling,Control,24,22,223.5,0.202,NA
+RUA,Normal,Tenacibaculum spp.,value,Biofouling,Control,24,24,228,0.0696,NA
+RUA,Lesion,Vibrio spp.,value,Biofouling,Control,24,22,249,0.608,NA
+RUA,Normal,Vibrio spp.,value,Biofouling,Control,24,24,288,1,NA
+FRC,Lesion,Tenacibaculum spp.,value,Biofouling,Control,11,11,55,0.363,Kidney
+FRC,Normal,Tenacibaculum spp.,value,Biofouling,Control,13,17,97.5,0.226,Kidney
+FRC,Lesion,Tenacibaculum spp.,value,Biofouling,Control,11,11,31.5,0.0525,Skin
+FRC,Normal,Tenacibaculum spp.,value,Biofouling,Control,13,17,101,0.695,Skin
+FRC,Lesion,Vibrio spp.,value,Biofouling,Control,11,11,55,0.363,Kidney
+FRC,Normal,Vibrio spp.,value,Biofouling,Control,13,17,97.5,0.226,Kidney
+FRC,Lesion,Vibrio spp.,value,Biofouling,Control,11,11,19.5,0.00251,Skin
+FRC,Normal,Vibrio spp.,value,Biofouling,Control,13,17,71,0.0797,Skin

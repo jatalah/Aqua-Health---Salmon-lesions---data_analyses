@@ -13,13 +13,6 @@ d <- read_excel('data/RUA_tank trial_data.xlsx', 1, na = "NA")
 source('theme_javier.R')
 theme_set(theme_javier(base_size = 9))
 
-# check data stats-------
-skim(d)
-
-# summarise data -----------
-d %>% group_by(Sampling) %>% get_summary_stats(`Length (mm)`)
-d %>% group_by(Sampling) %>% get_summary_stats(`Weight (g)`)
-
 
 # baseline data compare length and size by treatment -------
 base <-
@@ -97,7 +90,13 @@ survfit(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d) %>%
   )
 
 # The Cox regression model is a semi-parametric model that can be used to fit regression models that have survival outcomes. # We can fit regression models for survival data using the coxph() function from the {survival} package
-coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d)
+cox_rua <- coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d) 
+  
+summary(cox_rua)
+
+cox_frc %>% 
+broom::tidy(conf.int = T, exponentiate = T) %>%  
+  write_csv('tables/cox_regression_survival_RUA.csv')
 
 coxph(Surv(time, status) ~ Treatment + cluster(Tank), data = surv_d) %>% 
   tbl_regression(exp = T, show_single_row = "Treatment") 
@@ -112,8 +111,6 @@ mort_long %>%
   group_by(Treatment, name) %>% 
   get_summary_stats(value)
 
-
-
 ggplot(mort_long, aes(fct_rev(name), value, fill = Treatment)) +
   geom_boxplot(alpha = .5) +
   coord_flip() +
@@ -121,7 +118,6 @@ ggplot(mort_long, aes(fct_rev(name), value, fill = Treatment)) +
   stat_compare_means(label.y = 15,
                      label = "p.format",
                      method = 'wilcox.test')
-
 
 # compare length and size by treatment final -------
 final <- 
